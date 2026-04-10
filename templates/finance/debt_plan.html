@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% load currency_filters %}
+
+{% block title %}Debt Repayment Plan - Finance Advisor{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto mt-4 space-y-6">
+    <!-- Header -->
+    <div class="animate-fade-in-up flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-serif font-bold text-earth-800 dark:text-earth-100">Debt Repayment Plan</h1>
+            <p class="text-sm text-earth-500 dark:text-earth-400">Hybrid Advisor Strategy — Snowball motivation + Avalanche efficiency</p>
+        </div>
+        <a href="{% url 'add_debt' %}" class="btn-hover inline-flex items-center gap-2 bg-terra-500 hover:bg-terra-400 text-white font-semibold py-2.5 px-5 rounded-xl transition duration-200 shadow-lg shadow-terra-500/15">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            Add Debt
+        </a>
+    </div>
+
+    {% if debt_summary.debts %}
+    <!-- Overview Cards -->
+    <div class="animate-fade-in-up grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="glass-card rounded-xl p-5 text-center">
+            <p class="text-sm text-earth-500 dark:text-earth-400">Current Balance</p>
+            <p class="text-2xl font-bold text-terra-600 dark:text-terra-400"><span id="overview-total-debt">{{ debt_summary.total_remaining|indian_currency }}</span></p>
+        </div>
+        <div class="glass-card rounded-xl p-5 text-center">
+            <p class="text-sm text-earth-500 dark:text-earth-400">Amount Paid</p>
+            <p class="text-2xl font-bold text-olive-600 dark:text-olive-400"><span id="overview-total-paid">{{ debt_summary.total_paid|indian_currency }}</span></p>
+        </div>
+        <div class="glass-card rounded-xl p-5 text-center">
+            <p class="text-sm text-earth-500 dark:text-earth-400">Months to Freedom</p>
+            <p class="text-2xl font-bold text-earth-700 dark:text-earth-300" id="overview-months-to-freedom">
+                {% if months_to_freedom == -1 %}⚠️ N/A{% elif months_to_freedom == 0 %}🎉 Free!{% else %}{{ months_to_freedom }}{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Repayment Power -->
+    {% if power_data %}
+    <div class="animate-fade-in-up glass-card rounded-2xl p-6">
+        <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100 mb-4">Repayment Power Breakdown</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+            <div>
+                <p class="text-earth-500 dark:text-earth-400">Monthly Income</p>
+                <p class="font-bold text-earth-800 dark:text-earth-100">{{ power_data.monthly_income|indian_currency }}</p>
+            </div>
+            <div>
+                <p class="text-earth-500 dark:text-earth-400">Monthly Expenses</p>
+                <p class="font-bold text-earth-800 dark:text-earth-100">{{ power_data.monthly_expenses|indian_currency }}</p>
+            </div>
+            <div>
+                <p class="text-earth-500 dark:text-earth-400">Emergency Buffer (10%)</p>
+                <p class="font-bold text-terra-600 dark:text-terra-400">{{ power_data.emergency_buffer|indian_currency }}</p>
+            </div>
+            <div>
+                <p class="text-earth-500 dark:text-earth-400">Repayment Power</p>
+                <p class="font-bold text-olive-600 dark:text-olive-400">{{ power_data.repayment_power|indian_currency }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Individual Active Debts -->
+    <div class="animate-fade-in-up grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for debt in active_debts %}
+        <div class="glass-card rounded-2xl p-5 border-l-4 border-terra-500">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <h4 class="font-semibold text-earth-800 dark:text-earth-100">{{ debt.name }}</h4>
+                    <div class="flex items-center gap-1">
+                        <a href="{% url 'edit_debt' debt.pk %}" class="text-earth-400 hover:text-terra-500 transition p-1" title="Edit">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </a>
+                        <button onclick="deleteDebt('{{ debt.id }}')" class="text-earth-400 hover:text-terra-600 transition p-1" title="Delete">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-terra-600 dark:text-terra-400 bg-terra-50 dark:bg-terra-500/10 px-2 py-0.5 rounded-full">{{ debt.interest_rate }}% APR</span>
+            </div>
+            
+            <div class="mb-3">
+                <div class="flex justify-between text-xs text-earth-500 dark:text-earth-400 mb-1">
+                    <span><span id="debt-paid-text-{{ debt.id }}">{{ debt.amount_paid|indian_currency }}</span> paid</span>
+                    <span>{{ debt.total_amount|indian_currency }}</span>
+                </div>
+                <div class="w-full bg-earth-200 dark:bg-earth-700 rounded-full h-2.5 overflow-hidden">
+                    <div id="debt-progress-bar-{{ debt.id }}" class="bg-gradient-to-r from-terra-500 to-olive-500 h-2.5 rounded-full transition-all duration-700 shadow-sm" style="width: {{ debt.progress_percent }}%;"></div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-end text-sm">
+                <div class="flex flex-col">
+                    <span class="text-earth-500 dark:text-earth-400 text-[10px] font-bold uppercase tracking-widest">Remaining</span>
+                    <strong class="text-earth-800 dark:text-earth-100 text-base">
+                        <span id="debt-rem-{{ debt.id }}" data-raw="{{ debt.remaining }}">{{ debt.remaining|indian_currency }}</span>
+                    </strong>
+                </div>
+                <div class="flex items-center gap-1.5 p-1 bg-earth-100/50 dark:bg-earth-800/50 rounded-xl border border-earth-200 dark:border-earth-700/50">
+                    <div class="relative">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-earth-400 font-bold">₹</span>
+                        <input type="number" id="pay-input-{{ debt.id }}" placeholder="0" class="w-20 pl-4 py-1.5 rounded-lg bg-white dark:bg-earth-900 border-none text-xs text-right font-bold text-earth-800 dark:text-earth-100 focus:ring-2 focus:ring-olive-500 transition shadow-inner">
+                    </div>
+                    <button onclick="logPayment('{{ debt.id }}')" id="pay-btn-{{ debt.id }}" class="p-1.5 px-3 rounded-lg bg-olive-600 hover:bg-olive-500 text-white text-[10px] font-bold transition-all hover:scale-105 active:scale-95 shadow-lg shadow-olive-600/20 flex items-center gap-1">
+                        <span>Pay</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Cleared/Completed Debts -->
+    {% if cleared_debts %}
+    <div class="animate-fade-in-up space-y-4">
+        <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100 flex items-center gap-2">
+            <svg class="w-5 h-5 text-olive-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            Completed Debts
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 opacity-75">
+            {% for debt in cleared_debts %}
+            <div class="glass-card rounded-xl p-4 border-l-4 border-olive-500 relative group/cleared">
+                <div class="flex items-center justify-between mb-1">
+                    <p class="font-bold text-earth-800 dark:text-earth-100 text-sm truncate pr-8">{{ debt.name }}</p>
+                    <div class="flex items-center gap-1">
+                        <button onclick="deleteDebt('{{ debt.id }}')" class="opacity-0 group-hover/cleared:opacity-100 transition-opacity text-earth-400 hover:text-terra-600 p-1" title="Delete Permanent">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                        <span class="text-[9px] font-black text-olive-600 bg-olive-50 dark:bg-olive-500/10 px-2 py-0.5 rounded-full border border-olive-100 dark:border-olive-500/20">CLEARED</span>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-[10px] mt-2">
+                    <span class="text-earth-500 dark:text-earth-400">Total Paid: <strong class="text-earth-800 dark:text-earth-100">{{ debt.total_amount|indian_currency }}</strong></span>
+                    <span class="text-earth-400 italic">{{ debt.cleared_at|date:"M Y" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- AI Advice -->
+    {% if ai_advice %}
+    <div class="animate-fade-in-up glass-card rounded-2xl p-6 border-l-4 border-terra-500">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-terra-500 to-terra-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-terra-500/15">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-terra-600 dark:text-terra-400 uppercase tracking-wider">AI Debt Coach</p>
+                <p class="text-sm text-earth-500 dark:text-earth-400">Personalized advice powered by AI</p>
+            </div>
+        </div>
+        <div id="ai-debt-coach-content" class="text-sm text-earth-700 dark:text-earth-300 italic">{{ ai_advice }}</div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const el = document.getElementById('ai-debt-coach-content');
+                if (el && typeof formatAiText === 'function') {
+                    el.innerHTML = formatAiText(el.innerText);
+                    el.classList.remove('italic');
+                }
+            });
+        </script>
+    </div>
+    {% endif %}
+
+    <!-- Repayment Schedule -->
+    {% if schedule %}
+    <div class="animate-fade-in-up glass-card rounded-2xl overflow-hidden">
+        <div class="px-6 pt-6 pb-3">
+            <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100">Repayment Schedule</h3>
+            <p class="text-sm text-earth-500 dark:text-earth-400">Month-by-month plan using the Hybrid Strategy</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-earth-200 dark:border-earth-700">
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-earth-500 dark:text-earth-400 uppercase">Month</th>
+                        {% for debt in active_debts %}
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-earth-500 dark:text-earth-400 uppercase">{{ debt.name }}</th>
+                        {% endfor %}
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-earth-500 dark:text-earth-400 uppercase">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-earth-100 dark:divide-earth-800">
+                    {% for month in schedule %}
+                    <tr class="hover:bg-earth-100 dark:hover:bg-earth-800/50 transition-colors">
+                        <td class="px-6 py-3 text-sm font-medium text-earth-700 dark:text-earth-300">Month {{ month.month }}</td>
+                        {% for payment in month.payments %}
+                        <td class="px-6 py-3 text-sm text-right">
+                            <span class="text-earth-800 dark:text-earth-100 font-medium">{{ payment.payment|indian_currency }}</span>
+                            <br><span class="text-xs text-earth-400">({{ payment.remaining|indian_currency }} left)</span>
+                        </td>
+                        {% endfor %}
+                        <td class="px-6 py-3 text-sm text-right font-bold text-terra-600 dark:text-terra-400">{{ month.total_payment|indian_currency }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- No Debts State -->
+    <div class="animate-fade-in-up glass-card rounded-2xl p-12 text-center">
+        <svg class="w-16 h-16 text-olive-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <h3 class="text-xl font-serif font-bold text-earth-800 dark:text-earth-100 mb-2">You're debt-free! 🎉</h3>
+        <p class="text-earth-500 dark:text-earth-400 mb-6">No debts tracked. Add one if you'd like to create a repayment plan.</p>
+        <a href="{% url 'add_debt' %}" class="btn-hover inline-block bg-terra-500 hover:bg-terra-400 text-white font-semibold py-2.5 px-6 rounded-xl transition shadow-lg shadow-terra-500/15">
+            Add Your First Debt
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function deleteDebt(debtId) {
+    if (!confirm("Are you sure you want to delete this debt? This action cannot be undone and will remove it from all summaries.")) return;
+    
+    try {
+        const response = await fetch(`/finance/debt/delete/${debtId}/`, {
+            method: 'POST',
+            headers: { 
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (data.success) {
+            // Refresh to update all summaries and the schedule
+            window.location.reload();
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (e) {
+        console.error("Deletion failed", e);
+        alert("Server connection failed. Please try again.");
+    }
+}
+
+async function logPayment(debtId) {
+    const input = document.getElementById(`pay-input-${debtId}`);
+    const amount = parseFloat(input.value);
+    const maxAmountEl = document.getElementById(`debt-rem-${debtId}`);
+    const maxAmount = parseFloat(maxAmountEl ? maxAmountEl.getAttribute('data-raw') : 0) || 0;
+    const btn = document.getElementById(`pay-btn-${debtId}`);
+
+    if (isNaN(amount) || amount <= 0) {
+        input.classList.add('ring-2', 'ring-terra-500');
+        setTimeout(() => input.classList.remove('ring-2', 'ring-terra-500'), 1000);
+        return;
+    }
+    
+    if (amount > maxAmount + 0.1) {
+        alert("Payment exceeds remaining balance.");
+        input.value = maxAmount.toFixed(0);
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<div class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>';
+    try {
+        const response = await fetch("{% url 'log_debt_payment' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ debt_id: debtId, payment_amount: amount })
+        });
+        const data = await response.json();
+        if (data.success) {
+            // Check if debt is newly cleared
+            if (data.progress_individual >= 100) {
+                window.location.reload(); // Refresh to move card to Completed section
+                return;
+            }
+
+            const remEl = document.getElementById(`debt-rem-${debtId}`);
+            if (remEl) {
+                remEl.textContent = data.remaining_individual;
+                remEl.setAttribute('data-raw', data.remaining_individual_raw);
+            }
+            const paidEl = document.getElementById(`debt-paid-text-${debtId}`);
+            if (paidEl) paidEl.textContent = data.new_paid_individual;
+            
+            const progressEl = document.getElementById(`debt-progress-bar-${debtId}`);
+            if (progressEl) progressEl.style.width = data.progress_individual + '%';
+
+            document.getElementById('overview-total-paid').textContent = data.total_paid;
+            document.getElementById('overview-total-debt').textContent = data.total_remaining;
+            
+            const monthsFreedom = document.getElementById('overview-months-to-freedom');
+            if (data.months_to_freedom === -1) monthsFreedom.textContent = '⚠️ N/A';
+            else if (data.months_to_freedom === 0) monthsFreedom.textContent = '🎉 Free!';
+            else monthsFreedom.textContent = data.months_to_freedom;
+            
+            if (typeof fetchSidebarData === 'function') fetchSidebarData();
+            input.value = '';
+            input.placeholder = 'Paid! ✓';
+            setTimeout(() => { input.placeholder = '0'; }, 2000);
+        } else {
+            alert("Error: " + data.message);
+        }
+    } catch (e) {
+        console.error("Payment logging failed", e);
+        alert("Server connection failed.");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+</script>
+{% endblock %}
