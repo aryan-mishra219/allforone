@@ -13,5 +13,6 @@ urlpatterns = [
     path('debt/planner/', views.repayment_planner, name='repayment_planner'),
     path('debt/planner/advice/', views.get_planner_advice, name='get_planner_advice'),
     path('debt/planner/save/', views.save_planner_goal, name='save_planner_goal'),
+    path('debt/repayment-power/update/', views.update_repayment_power, name='update_repayment_power'),
     path('transactions/delete/', views.delete_transactions, name='delete_transactions'),
 ]

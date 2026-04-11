@@ -164,6 +164,10 @@ def get_repayment_power(user):
     emergency_buffer = monthly_income * Decimal('0.10')
     repayment_power = max(Decimal('0.00'), monthly_income - monthly_expenses - emergency_buffer)
 
+    # Check for manual override from user profile
+    if hasattr(user, 'profile') and user.profile.repayment_power_override is not None:
+        repayment_power = user.profile.repayment_power_override
+
     return {
         'monthly_income': monthly_income,
         'monthly_expenses': monthly_expenses,
@@ -179,8 +183,8 @@ def generate_repayment_schedule(user):
     from .models import Debt
     from decimal import Decimal, ROUND_HALF_UP
 
-    # Only include active, uncleared debts
-    active_debts = list(Debt.objects.filter(user=user, cleared_at__isnull=True))
+    # Only include active, uncleared debts, ordered exactly as in the main view
+    active_debts = list(Debt.objects.filter(user=user, cleared_at__isnull=True).order_by('interest_rate'))
     if not active_debts:
         return {'schedule': [], 'months_to_freedom': 0, 'total_interest_saved': 0}
 
@@ -195,19 +199,17 @@ def generate_repayment_schedule(user):
             'power_data': {k: float(v) for k, v in power_data.items()},
         }
 
-    # Prepare high-precision working copies
+    # Prepare high-precision working copies for all active debts to ensure column alignment
     working_debts = []
     for d in active_debts:
-        rem = Decimal(str(d.remaining))
-        if rem > 0:
-            working_debts.append({
-                'id': d.id,
-                'name': d.name,
-                'remaining': rem,
-                'interest_rate': Decimal(str(d.interest_rate)),
-                'min_payment': Decimal(str(d.minimum_payment)),
-                'monthly_rate': Decimal(str(d.interest_rate)) / Decimal('100') / Decimal('12'),
-            })
+        working_debts.append({
+            'id': d.id,
+            'name': d.name,
+            'remaining': Decimal(str(d.remaining)),
+            'interest_rate': Decimal(str(d.interest_rate)),
+            'min_payment': Decimal(str(d.minimum_payment)),
+            'monthly_rate': Decimal(str(d.interest_rate)) / Decimal('100') / Decimal('12'),
+        })
 
     if not working_debts:
         return {'schedule': [], 'months_to_freedom': 0, 'power_data': {k: float(v) for k, v in power_data.items()}}
@@ -216,12 +218,13 @@ def generate_repayment_schedule(user):
     temp_sorted = sorted(working_debts, key=lambda x: x['remaining'])
     snowball_ids = [d['id'] for d in temp_sorted[:2]]
 
-    # Hybrid Strategy Sorting
+    # Hybrid Strategy Sorting (Smallest 2 first, then highest interest)
     def strategy_sort(debt):
         is_snowball = 1 if debt['id'] in snowball_ids else 0
         return (-is_snowball, -debt['interest_rate'])
 
-    working_debts.sort(key=strategy_sort)
+    # We use a COPY for the allocation logic but keep the original order for the output
+    allocation_order = sorted(working_debts, key=strategy_sort)
 
     schedule = []
     month_iter = 0
@@ -229,34 +232,33 @@ def generate_repayment_schedule(user):
 
     while any(d['remaining'] > 0 for d in working_debts) and month_iter < max_months:
         month_iter += 1
-        month_data = {'month': month_iter, 'payments': [], 'total_payment': Decimal('0.00')}
+        month_data = {'month': month_iter, 'payments_map': {}, 'total_payment': Decimal('0.00')}
         available = monthly_power
 
         # Step 1: Satisfy Minimum Payments and Interest
-        for debt in working_debts:
+        # Note: We iterate in allocation order to prioritize minimums of high-priority debts if funds are low
+        for debt in allocation_order:
             if debt['remaining'] <= 0:
                 continue
             
-            # Monthly Interest Addition
+            # Monthly Interest Addition (once per month per debt)
             interest = (debt['remaining'] * debt['monthly_rate']).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
             debt['remaining'] += interest
             
-            # Pay Minimum (capped by remaining balance)
-            payment = min(debt['min_payment'], debt['remaining'])
+            # Pay Minimum (capped by remaining balance AND strictly by available monthly power)
+            payment = min(debt['min_payment'], debt['remaining'], max(Decimal('0'), available))
             debt['remaining'] -= payment
             available -= payment
             
-            month_data['payments'].append({
-                'name': debt['name'],
-                'debt_id': debt['id'],
+            month_data['payments_map'][debt['id']] = {
                 'payment': payment,
                 'remaining': debt['remaining'],
-            })
+            }
             month_data['total_payment'] += payment
 
         # Step 2: Distribute SURPLUS (Snowball/Avalanche)
         if available > 0:
-            for debt in working_debts:
+            for debt in allocation_order:
                 if available <= 0 or debt['remaining'] <= 0:
                     continue
                 
@@ -264,21 +266,28 @@ def generate_repayment_schedule(user):
                 debt['remaining'] -= extra
                 available -= extra
                 
-                # Update records
-                for p in month_data['payments']:
-                    if p['debt_id'] == debt['id']:
-                        p['payment'] += extra
-                        p['remaining'] = debt['remaining']
-                        break
+                # Update records in the map
+                if debt['id'] in month_data['payments_map']:
+                    month_data['payments_map'][debt['id']]['payment'] += extra
+                    month_data['payments_map'][debt['id']]['remaining'] = debt['remaining']
+                else:
+                    # This shouldn't happen usually as they get min payments, 
+                    # but if min_payment was 0, it might
+                    month_data['payments_map'][debt['id']] = {
+                        'payment': extra,
+                        'remaining': debt['remaining'],
+                    }
                 month_data['total_payment'] += extra
 
-        # Prepare for JSON Serialization (convert Decimal to float/int)
+        # Step 3: Format for JSON and ensure fixed column order
+        # We must iterate over working_debts (original order) to ensure columns match templates
         formatted_payments = []
-        for p in month_data['payments']:
+        for debt in working_debts:
+            p_info = month_data['payments_map'].get(debt['id'], {'payment': Decimal('0'), 'remaining': debt['remaining']})
             formatted_payments.append({
-                'name': p['name'],
-                'payment': int(p['payment'].quantize(Decimal('1'), rounding=ROUND_HALF_UP)),
-                'remaining': int(p['remaining'].quantize(Decimal('1'), rounding=ROUND_HALF_UP)),
+                'name': debt['name'],
+                'payment': int(p_info['payment'].quantize(Decimal('1'), rounding=ROUND_HALF_UP)),
+                'remaining': int(p_info['remaining'].quantize(Decimal('1'), rounding=ROUND_HALF_UP)),
             })
         
         schedule.append({

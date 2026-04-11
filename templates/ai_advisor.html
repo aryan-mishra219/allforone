@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}AI Financial Advisor | Finance Advisor{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto h-[calc(100vh-12rem)] flex flex-col animate-fade-in-up">
+    <!-- Header Area -->
+    <div class="mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-terra-500 to-terra-700 text-white flex items-center justify-center shadow-lg shadow-terra-500/20">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-earth-800 dark:text-earth-100 italic font-serif">AI Financial Advisor</h1>
+                <p class="text-sm text-earth-500 dark:text-earth-400">Personalized coaching powered by Groq Llama 3</p>
+            </div>
+        </div>
+        <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-olive-500/10 border border-olive-500/20 text-olive-600 dark:text-olive-400 text-xs font-semibold">
+            <span class="w-2 h-2 bg-olive-500 rounded-full animate-pulse"></span>
+            CONNECTED TO YOUR DATA
+        </div>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="flex-1 glass-card rounded-3xl shadow-xl overflow-hidden flex flex-col border border-earth-200/50 dark:border-earth-700/30">
+        <!-- Messages Area -->
+        <div id="full-chat-messages" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+            <!-- AI Welcome -->
+            <div class="flex gap-4 max-w-3xl">
+                <div class="w-10 h-10 rounded-xl bg-terra-50 dark:bg-terra-500/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                    <svg class="w-6 h-6 text-terra-600 dark:text-terra-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="space-y-2">
+                    <div class="bg-earth-50 dark:bg-earth-800/40 border border-earth-200/50 dark:border-earth-700/30 rounded-2xl rounded-tl-none px-5 py-4 shadow-sm">
+                        <p class="text-earth-700 dark:text-earth-200 leading-relaxed">
+                            Namaste! 🙏 I'm your dedicated Financial Advisor. I have analyzed your transactions and debt profile.
+                        </p>
+                        <p class="text-earth-700 dark:text-earth-200 leading-relaxed mt-2">
+                            How can I help you optimize your wealth today? You can ask things like:
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                            <button type="button" onclick="quickAsk('Analyze my spending this month')" class="text-left px-3 py-2 rounded-xl bg-earth-100/50 dark:bg-earth-700/30 hover:bg-terra-500/10 hover:text-terra-600 transition text-xs font-medium text-earth-500 border border-transparent hover:border-terra-500/20 cursor-pointer active:scale-95">
+                                📊 Analyze my spending this month
+                            </button>
+                            <button type="button" onclick="quickAsk('How can I pay off my debts faster?')" class="text-left px-3 py-2 rounded-xl bg-earth-100/50 dark:bg-earth-700/30 hover:bg-terra-500/10 hover:text-terra-600 transition text-xs font-medium text-earth-500 border border-transparent hover:border-terra-500/20 cursor-pointer active:scale-95">
+                                🚀 How can I pay off my debts faster?
+                            </button>
+                            <button type="button" onclick="quickAsk('Give me a savings tip for this week')" class="text-left px-3 py-2 rounded-xl bg-earth-100/50 dark:bg-earth-700/30 hover:bg-terra-500/10 hover:text-terra-600 transition text-xs font-medium text-earth-500 border border-transparent hover:border-terra-500/20 cursor-pointer active:scale-95">
+                                💡 Give me a savings tip for this week
+                            </button>
+                            <button type="button" onclick="quickAsk('is my financial health good?')" class="text-left px-3 py-2 rounded-xl bg-earth-100/50 dark:bg-earth-700/30 hover:bg-terra-500/10 hover:text-terra-600 transition text-xs font-medium text-earth-500 border border-transparent hover:border-terra-500/20 cursor-pointer active:scale-95">
+                                ❤️ Is my financial health good?
+                            </button>
+                        </div>
+                    </div>
+                    <span class="text-[10px] text-earth-400 ml-1">Just now</span>
+                </div>
+            </div>
+
+            <!-- Typing Indicator (Hidden by default) -->
+            <div id="full-typing-indicator" class="hidden flex gap-4">
+                <div class="w-10 h-10 rounded-xl bg-terra-50 dark:bg-terra-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-terra-600 dark:text-terra-400 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <div class="bg-earth-50 dark:bg-earth-800/40 rounded-2xl rounded-tl-none px-5 py-3 flex gap-1 items-center border border-earth-200/50 dark:border-earth-700/30">
+                    <span class="w-1.5 h-1.5 bg-terra-400 rounded-full animate-bounce" style="animation-delay: 0s;"></span>
+                    <span class="w-1.5 h-1.5 bg-terra-400 rounded-full animate-bounce" style="animation-delay: 0.15s;"></span>
+                    <span class="w-1.5 h-1.5 bg-terra-400 rounded-full animate-bounce" style="animation-delay: 0.3s;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-6 border-t border-earth-200/50 dark:border-earth-700/30 bg-earth-50/50 dark:bg-earth-950/20">
+            <form id="full-chat-form" class="relative group">
+                <input id="full-chat-input" type="text" placeholder="Type your financial query here..." autocomplete="off"
+                    class="w-full pl-6 pr-16 py-4 rounded-2xl bg-white dark:bg-earth-900 border border-earth-200 dark:border-earth-700 text-earth-800 dark:text-earth-100 focus:outline-none focus:ring-2 focus:ring-terra-500/50 focus:border-terra-500 shadow-sm transition-all group-hover:shadow-md" />
+                <button type="submit" class="absolute right-2 top-2 bottom-2 px-5 bg-terra-500 hover:bg-terra-600 text-white rounded-xl shadow-lg shadow-terra-500/20 transition-all active:scale-95 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                    </svg>
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-earth-400 mt-4 uppercase tracking-tighter">
+                Advice is based on provided data. Always consult a human professional for high-stakes decisions.
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    #full-chat-messages::-webkit-scrollbar { width: 4px; }
+    #full-chat-messages::-webkit-scrollbar-thumb { background: #D4C9B8; border-radius: 10px; }
+    .dark #full-chat-messages::-webkit-scrollbar-thumb { background: #3D4A3E; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Define quickAsk on the window object to ensure it is globally accessible even with PJAX navigation
+    window.quickAsk = function(text) {
+        const input = document.getElementById('full-chat-input');
+        if (input) {
+            input.value = text;
+            const form = document.getElementById('full-chat-form');
+            if (form) {
+                form.dispatchEvent(new Event('submit'));
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('full-chat-form');
+        const input = document.getElementById('full-chat-input');
+        const messagesContainer = document.getElementById('full-chat-messages');
+        const typingIndicator = document.getElementById('full-typing-indicator');
+
+        // Hide the global chat widget on this page
+        const globalChat = document.getElementById('chat-widget');
+        if (globalChat) globalChat.style.display = 'none';
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            // User Message
+            appendFullMessage(msg, 'user');
+            input.value = '';
+            
+            // Show typing
+            typingIndicator.classList.remove('hidden');
+            messagesContainer.appendChild(typingIndicator); // Keep it at bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            try {
+                const res = await fetch('{% url "ai_chat" %}', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-CSRFToken': getCookie('csrftoken') 
+                    },
+                    body: JSON.stringify({ message: msg }),
+                });
+                const data = await res.json();
+                typingIndicator.classList.add('hidden');
+                appendFullMessage(data.message, 'ai');
+            } catch (err) {
+                typingIndicator.classList.add('hidden');
+                appendFullMessage('⚠️ Network error. Please check your connection.', 'ai');
+            }
+        });
+
+        function appendFullMessage(text, sender) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex gap-4 animate__animated animate__fadeInUp animate__faster';
+            
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            if (sender === 'user') {
+                wrapper.classList.add('justify-end');
+                wrapper.innerHTML = `
+                    <div class="space-y-1 max-w-xl text-right">
+                        <div class="bg-terra-500 text-white rounded-2xl rounded-tr-none px-5 py-3 shadow-md">
+                            <p class="text-sm">${escapeHtml(text)}</p>
+                        </div>
+                        <span class="text-[10px] text-earth-400 mr-1">${timeStr}</span>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-earth-200 dark:bg-earth-800 flex items-center justify-center flex-shrink-0 shadow-sm">
+                         <span class="text-sm font-bold text-earth-600 dark:text-earth-400">{{ user.username|first|upper }}</span>
+                    </div>
+                `;
+            } else {
+                wrapper.classList.add('max-w-3xl');
+                wrapper.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl bg-terra-50 dark:bg-terra-500/10 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg class="w-6 h-6 text-terra-600 dark:text-terra-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <div class="bg-earth-50 dark:bg-earth-800/40 border border-earth-200/50 dark:border-earth-700/30 rounded-2xl rounded-tl-none px-5 py-4 shadow-sm">
+                            <div class="text-sm text-earth-700 dark:text-earth-200 leading-relaxed">${formatAiText(text)}</div>
+                        </div>
+                        <span class="text-[10px] text-earth-400 ml-1">${timeStr}</span>
+                    </div>
+                `;
+            }
+            messagesContainer.insertBefore(wrapper, typingIndicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function escapeHtml(str) { 
+            const div = document.createElement('div'); 
+            div.textContent = str; 
+            return div.innerHTML; 
+        }
+
+        // Re-enable global chat if leaving page via PJAX
+        window.addEventListener('blur', () => {
+             if (globalChat) globalChat.style.display = 'block';
+        });
+    });
+</script>
+{% endblock %}

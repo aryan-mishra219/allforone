@@ -6,7 +6,9 @@ from django.dispatch import receiver
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     bio = models.TextField(blank=True)
-    profile_picture = models.URLField(blank=True, help_text="Placeholder URL for profile picture")
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True, help_text="Upload your profile picture")
+    phone_number = models.CharField(max_length=15, blank=True, help_text="Mobile or contact number")
+    repayment_power_override = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True, help_text="Manual monthly debt budget")
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

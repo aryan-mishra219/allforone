@@ -89,3 +89,52 @@
     </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+    // Category mapping: { id: type }
+    const categoryMapping = {
+        {% for cat in categories %}
+        "{{ cat.id }}": "{{ cat.category_type }}",
+        {% endfor %}
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const typeRadios = document.querySelectorAll('input[name="transaction_type"]');
+        const categorySelect = document.querySelector('select[name="category"]');
+        
+        // Store all original options
+        const originalOptions = Array.from(categorySelect.options);
+
+        function filterCategories() {
+            const selectedType = Array.from(typeRadios).find(r => r.checked)?.value;
+            const currentVal = categorySelect.value;
+            
+            // Clear current options
+            categorySelect.innerHTML = '';
+            
+            // Add matching options
+            originalOptions.forEach(opt => {
+                if (opt.value === "" || categoryMapping[opt.value] === selectedType) {
+                    categorySelect.appendChild(opt.cloneNode(true));
+                }
+            });
+
+            // Restore selection if still valid, otherwise pick first valid
+            if (categoryMapping[currentVal] === selectedType) {
+                categorySelect.value = currentVal;
+            } else {
+                categorySelect.value = ""; // Default to "---------"
+            }
+        }
+
+        // Listen for changes
+        typeRadios.forEach(radio => {
+            radio.addEventListener('change', filterCategories);
+        });
+
+        // Initial filter
+        filterCategories();
+    });
+</script>
+{% endblock %}

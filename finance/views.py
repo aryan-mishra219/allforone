@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Transaction, Debt
+from .models import Transaction, Category, Debt
 from .forms import TransactionForm, DebtForm
 from .utils import get_financial_summary, get_debt_summary, generate_repayment_schedule, format_indian_currency
 from core.ai_service import get_debt_strategy_advice
@@ -21,7 +21,11 @@ def add_transaction(request):
     else:
         form = TransactionForm()
 
-    return render(request, 'finance/add_transaction.html', {'form': form})
+    categories = Category.objects.all()
+    return render(request, 'finance/add_transaction.html', {
+        'form': form,
+        'categories': categories,
+    })
 
 
 @login_required
@@ -261,6 +265,27 @@ def delete_transactions(request):
                 'new_income': format_indian_currency(summary['total_income']),
                 'new_expenses': format_indian_currency(summary['total_expenses']),
             })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+    return JsonResponse({'success': False}, status=405)
+
+
+@login_required
+def update_repayment_power(request):
+    """AJAX endpoint to update user's manual repayment power goal."""
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body or '{}')
+            amount_str = body.get('amount')
+            
+            profile = request.user.profile
+            if amount_str is None or str(amount_str).strip() == "":
+                profile.repayment_power_override = None
+            else:
+                profile.repayment_power_override = Decimal(str(amount_str))
+            
+            profile.save()
+            return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
     return JsonResponse({'success': False}, status=405)

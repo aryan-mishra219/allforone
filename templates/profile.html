@@ -1,39 +1,216 @@
 {% extends "base.html" %}
 
-{% block title %}Profile - Finance Advisor{% endblock %}
+{% block title %}Profile Dashboard - Finance Advisor{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto mt-4 space-y-6">
-    <!-- User Header -->
-    <div class="animate-fade-in-up glass-card rounded-2xl p-8">
-        <div class="flex items-center gap-6">
-            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-terra-500 to-terra-700 flex items-center justify-center text-3xl font-bold text-white shadow-lg shadow-terra-500/20">
-                {{ user.username|make_list|first|upper }}
-            </div>
-            <div>
-                <h2 class="text-2xl font-serif font-bold text-earth-800 dark:text-earth-100">{{ user.username }}</h2>
-                <p class="text-earth-500 dark:text-earth-400">{{ user.email }}</p>
-            </div>
-        </div>
+<div class="max-w-4xl mx-auto mt-4 lg:mt-8 space-y-8 pb-12">
+    <!-- Breadcrumbs/Header -->
+    <div class="animate-fade-in-up">
+        <h1 class="text-3xl font-serif font-bold text-earth-800 dark:text-earth-100">Profile Dashboard</h1>
+        <p class="text-earth-500 dark:text-earth-400 mt-1">Manage your identity, appearance, and account security.</p>
     </div>
 
-    <!-- Security Settings -->
-    <div class="animate-fade-in-up glass-card rounded-2xl p-6">
-        <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100 mb-4">Security Settings</h3>
-        <div class="bg-earth-100 dark:bg-earth-800/50 rounded-xl border border-earth-200 dark:border-earth-700 p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div>
-                <h4 class="font-medium text-earth-800 dark:text-earth-200">Two-Factor Authentication</h4>
-                <p class="text-sm text-earth-500 dark:text-earth-400 mt-1">Add an extra layer of security to your account.</p>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        <!-- Left Column: Avatar & Quick Actions -->
+        <div class="lg:col-span-1 space-y-6 animate-fade-in-up">
+            <div class="glass-card rounded-3xl p-8 text-center relative overflow-hidden group">
+                <!-- Background Decorative Gradient -->
+                <div class="absolute inset-0 bg-gradient-to-br from-terra-500/5 to-olive-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                
+                <div class="relative inline-block mx-auto">
+                    <div id="avatar-container" class="relative">
+                        {% if user.profile.profile_picture %}
+                        <img id="profile-preview" src="{{ user.profile.profile_picture.url }}" alt="Profile" class="w-32 h-32 rounded-3xl object-cover ring-4 ring-white dark:ring-earth-800 shadow-2xl transition-transform group-hover:scale-105">
+                        {% else %}
+                        <div id="profile-initial" class="w-32 h-32 rounded-3xl bg-gradient-to-br from-terra-500 to-terra-600 flex items-center justify-center text-4xl font-bold text-white shadow-2xl transition-transform group-hover:scale-105">
+                            {{ user.username|first|upper }}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Pencil Icon Overlay -->
+                        <button type="button" id="pencil-trigger" class="absolute -bottom-2 -right-2 w-10 h-10 bg-terra-600 hover:bg-terra-500 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white dark:border-earth-900 transition-all active:scale-90 z-10" title="Change Profile Photo">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                        </button>
+                    </div>
+                    
+                </div>
+                
+                <div class="mt-6">
+                    <h2 class="text-xl font-bold text-earth-800 dark:text-earth-100">{{ user.get_full_name|default:user.username }}</h2>
+                    <p class="text-sm text-earth-500 dark:text-earth-400">@{{ user.username }}</p>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-earth-100 dark:border-earth-800 flex justify-center gap-4">
+                    <div class="text-center">
+                        <p class="text-[10px] uppercase tracking-widest text-earth-400 font-bold mb-1">Joined</p>
+                        <p class="text-sm font-semibold text-earth-700 dark:text-earth-300">{{ user.date_joined|date:"M Y" }}</p>
+                    </div>
+                </div>
             </div>
-            <div class="flex gap-3">
-                <a href="{% url 'two_factor:setup' %}" class="btn-hover bg-terra-500 hover:bg-terra-400 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md shadow-terra-500/15">
-                    Enable 2FA
-                </a>
-                <a href="{% url 'two_factor:disable' %}" class="btn-hover bg-terra-50 dark:bg-terra-900/20 hover:bg-terra-100 dark:hover:bg-terra-900/40 text-terra-600 dark:text-terra-400 border border-terra-200 dark:border-terra-800/50 text-sm font-semibold py-2 px-4 rounded-lg transition duration-200">
-                    Disable
-                </a>
+
+            <!-- Theme Settings Card -->
+            <div class="glass-card rounded-2xl p-6">
+                <h3 class="text-sm font-bold text-earth-800 dark:text-earth-100 mb-4 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-terra-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    Appearance
+                </h3>
+                <div class="flex items-center justify-between p-3 rounded-xl bg-earth-50 dark:bg-earth-900/50 border border-earth-100 dark:border-earth-800">
+                    <span class="text-sm text-earth-600 dark:text-earth-400">Dark Mode</span>
+                    <button id="dashboard-theme-toggle" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-earth-200 dark:bg-terra-600">
+                        <span id="theme-knob" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0 dark:translate-x-5"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Forms -->
+        <div class="lg:col-span-2 space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6 animate-fade-in-up" style="animation-delay: 100ms">
+                {% csrf_token %}
+                
+                <!-- Form Errors -->
+                {% if u_form.errors or p_form.errors %}
+                <div class="glass-card bg-red-500/10 border-red-500/20 p-4 rounded-2xl animate-shake">
+                    <ul class="text-sm text-red-500 space-y-1">
+                        {% for field in u_form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+                        {% for field in p_form %}{% for error in field.errors %}<li><strong>{{ field.label }}:</strong> {{ error }}</li>{% endfor %}{% endfor %}
+                        {% for error in u_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                        {% for error in p_form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Hidden inputs for file upload -->
+                <div class="hidden">
+                    {{ p_form.profile_picture }}
+                </div>
+                
+                <!-- Personal Information -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100 mb-6 pb-2 border-b border-earth-100 dark:border-earth-800">Personal Information</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">Username</label>
+                                {{ u_form.username }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+                                {{ u_form.email }}
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">First Name</label>
+                                {{ u_form.first_name }}
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">Last Name</label>
+                                {{ u_form.last_name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Customization -->
+                <div class="glass-card rounded-3xl p-8">
+                    <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100 mb-6 pb-2 border-b border-earth-100 dark:border-earth-800">Customization</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</label>
+                                {{ p_form.phone_number }}
+                            </div>
+                            <div class="flex items-end">
+                                <p class="text-xs text-earth-500 dark:text-earth-400 italic mb-2">Update your avatar by clicking the pencil icon on your profile picture.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-earth-500 dark:text-earth-400 uppercase tracking-widest mb-1.5 ml-1">Short Bio</label>
+                            {{ p_form.bio }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="submit" class="btn-hover px-8 py-3 bg-terra-600 hover:bg-terra-500 text-white font-bold rounded-2xl shadow-xl shadow-terra-600/20 transition-all active:scale-95">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+
+            <!-- Security Section -->
+            <div class="glass-card rounded-3xl p-8 animate-fade-in-up" style="animation-delay: 200ms">
+                <div class="flex items-center justify-between mb-6 pb-2 border-b border-earth-100 dark:border-earth-800">
+                    <h3 class="text-lg font-serif font-bold text-earth-800 dark:text-earth-100">Account Security</h3>
+                    <span class="px-2 py-1 rounded-md bg-olive-50 dark:bg-olive-500/10 text-olive-600 dark:text-olive-400 text-[10px] font-bold">PROTECTED</span>
+                </div>
+                
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-2xl bg-earth-50 dark:bg-earth-900/50 border border-earth-100 dark:border-earth-800">
+                    <div>
+                        <h4 class="font-bold text-earth-800 dark:text-earth-200">Two-Factor Authentication</h4>
+                        <p class="text-sm text-earth-500 dark:text-earth-400 mt-0.5">Protect your financial data with 2FA.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{% url 'two_factor:setup' %}" class="px-4 py-2 bg-terra-600 hover:bg-terra-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-terra-600/10 transition-all">Setup</a>
+                        <a href="{% url 'two_factor:disable' %}" class="px-4 py-2 bg-earth-200 dark:bg-earth-800 text-earth-700 dark:text-earth-300 text-xs font-bold rounded-xl transition-all">Disable</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Theme Toggle Logic for Dashboard Switch
+    const dashThemeBtn = document.getElementById('dashboard-theme-toggle');
+    if (dashThemeBtn) {
+        dashThemeBtn.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            
+            // Sync with global toggle if it exists
+            const globalIconSun = document.getElementById('icon-sun');
+            const globalIconMoon = document.getElementById('icon-moon');
+            if (globalIconSun && globalIconMoon) {
+                globalIconSun.classList.toggle('hidden', !isDark);
+                globalIconMoon.classList.toggle('hidden', isDark);
+            }
+        });
+    }
+
+    // Pencil Icon Trigger
+    const pencilBtn = document.getElementById('pencil-trigger');
+    const picInput = document.querySelector('input[name="profile_picture"]');
+    const previewImg = document.getElementById('profile-preview');
+    const initialDiv = document.getElementById('profile-initial');
+    
+    if (pencilBtn && picInput) {
+        pencilBtn.addEventListener('click', () => picInput.click());
+        
+        picInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const url = event.target.result;
+                    if (previewImg) {
+                        previewImg.src = url;
+                    } else if (initialDiv) {
+                        // Create img if it doesn't exist
+                        const newImg = document.createElement('img');
+                        newImg.id = 'profile-preview';
+                        newImg.src = url;
+                        newImg.className = initialDiv.className + ' object-cover ring-4 ring-white dark:ring-earth-800 shadow-2xl';
+                        initialDiv.replaceWith(newImg);
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+</script>
 {% endblock %}

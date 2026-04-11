@@ -135,3 +135,5 @@ LOGIN_REDIRECT_URL = 'dashboard'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Add this at the bottom of your settings.py
 CSRF_TRUSTED_ORIGINS = ['https://allforone.loca.lt']
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

@@ -46,6 +46,12 @@ def dashboard(request):
 
 
 @login_required
+def ai_advisor(request):
+    """Full-page AI Advisor interface."""
+    return render(request, 'ai_advisor.html')
+
+
+@login_required
 @require_POST
 def ai_chat(request):
     """AJAX endpoint for AI chat — accepts JSON POST, returns JSON response."""
