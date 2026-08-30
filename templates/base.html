@@ -172,17 +172,26 @@
     <!-- Top Loader Bar -->
     <div id="top-loader" class="fixed top-0 left-0 h-1 bg-terra-500 z-[100] transition-all duration-300 w-0 opacity-0"></div>
 
-    <!-- ========== SIDEBAR (Desktop) ========== -->
-    <aside id="sidebar" class="hidden lg:flex flex-col fixed inset-y-0 left-0 w-64 bg-earth-50/80 dark:bg-earth-950/80 backdrop-blur-xl border-r border-earth-200 dark:border-earth-700/50 z-40">
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="mobile-sidebar-backdrop" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-earth-900/50 dark:bg-earth-950/70 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity duration-300"></div>
+
+    <!-- ========== SIDEBAR ========== -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-earth-50/95 dark:bg-earth-950/95 backdrop-blur-xl border-r border-earth-200 dark:border-earth-700/50 z-50 flex flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <!-- Logo -->
-        <div class="flex items-center gap-3 px-6 h-16 border-b border-earth-200 dark:border-earth-700/50">
-            <div class="w-8 h-8 rounded-lg bg-terra-500 flex items-center justify-center shadow-lg shadow-terra-500/25">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <div class="flex items-center justify-between px-6 h-16 border-b border-earth-200 dark:border-earth-700/50">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-terra-500 flex items-center justify-center shadow-lg shadow-terra-500/25">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div>
+                    <span class="font-bold text-lg tracking-tight text-earth-800 dark:text-earth-100">Finance Advisor</span>
+                    <p class="text-[10px] text-earth-500 dark:text-earth-400 -mt-0.5">Smart Money Manager</p>
+                </div>
             </div>
-            <div>
-                <span class="font-bold text-lg tracking-tight text-earth-800 dark:text-earth-100">Finance Advisor</span>
-                <p class="text-[10px] text-earth-500 dark:text-earth-400 -mt-0.5">Smart Money Manager</p>
-            </div>
+            <!-- Close button on mobile -->
+            <button onclick="toggleMobileSidebar()" class="lg:hidden p-1.5 rounded-lg text-earth-500 hover:bg-earth-200 dark:hover:bg-earth-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
 
         <!-- Nav Links -->
@@ -267,6 +276,10 @@
         <!-- Top Bar -->
         <header class="sticky top-0 z-30 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-earth-50/70 dark:bg-earth-950/70 backdrop-blur-xl border-b border-earth-200 dark:border-earth-700/50">
             <div class="flex items-center gap-3 lg:hidden">
+                <!-- Hamburger Button for Mobile -->
+                <button onclick="toggleMobileSidebar()" class="p-2 rounded-xl bg-earth-200/80 dark:bg-earth-800/80 text-earth-700 dark:text-earth-200 hover:bg-earth-300 dark:hover:bg-earth-700 transition" aria-label="Toggle Navigation Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
                 <div class="w-8 h-8 rounded-lg bg-terra-500 flex items-center justify-center shadow-lg shadow-terra-500/25">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
@@ -455,6 +468,20 @@
     <!-- ========== CORE SCRIPTS ========== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-sidebar-backdrop');
+            if (!sidebar || !backdrop) return;
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -652,6 +679,14 @@
                 const link = e.target.closest('a');
                 if (!link || !link.href) return;
                 
+                // Close mobile sidebar on link click
+                const sidebar = document.getElementById('sidebar');
+                const backdrop = document.getElementById('mobile-sidebar-backdrop');
+                if (sidebar && !sidebar.classList.contains('-translate-x-full')) {
+                    sidebar.classList.add('-translate-x-full');
+                    if (backdrop) backdrop.classList.add('hidden');
+                }
+
                 const url = new URL(link.href);
                 if (url.origin !== window.location.origin) return;
                 if (link.hasAttribute('download') || link.target === '_blank') return;
