@@ -18,7 +18,7 @@ def get_groq_client():
         return None
 
 
-MODEL_NAME = "llama-3.3-70b-versatile"
+MODEL_NAME = "qwen/qwen3.8-27b"
 
 
 def build_financial_context(user):

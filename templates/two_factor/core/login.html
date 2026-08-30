@@ -23,17 +23,47 @@
             {% csrf_token %}
             {{ wizard.management_form }}
 
+            {% if wizard.form.non_field_errors %}
+            <div class="p-3 rounded-xl bg-terra-50 dark:bg-terra-900/30 border border-terra-200 dark:border-terra-800 text-xs text-terra-600 dark:text-terra-300">
+                {% for error in wizard.form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             {% for field in wizard.form %}
             <div>
-                <label class="block text-sm font-medium text-earth-700 dark:text-earth-300 mb-1">{{ field.label }}</label>
-                <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.html_name }}" value="{{ field.value|default:'' }}"
-                       class="w-full px-3 py-2.5 rounded-xl bg-earth-100 dark:bg-earth-800 border border-earth-200 dark:border-earth-700 text-earth-800 dark:text-earth-100 focus:outline-none focus:ring-2 focus:ring-terra-500 focus:border-transparent transition"
-                       {% if field.field.widget.input_type == 'password' %}type="password"{% endif %} />
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-earth-700 dark:text-earth-300 mb-1">{{ field.label }}</label>
+                <div class="login-field-wrapper">
+                    {{ field }}
+                </div>
                 {% for error in field.errors %}
                 <p class="text-xs text-terra-500 mt-1">{{ error }}</p>
                 {% endfor %}
             </div>
             {% endfor %}
+
+            <style>
+                .login-field-wrapper input {
+                    width: 100%;
+                    padding: 0.625rem 0.75rem;
+                    border-radius: 0.75rem;
+                    background-color: var(--tw-bg-opacity, #F5EFE6);
+                    border: 1px solid #E8E0D4;
+                    color: #1A1D1A;
+                    outline: none;
+                    transition: all 0.2s;
+                }
+                .dark .login-field-wrapper input {
+                    background-color: #2D3A2E;
+                    border-color: #3D4A3E;
+                    color: #F5EFE6;
+                }
+                .login-field-wrapper input:focus {
+                    border-color: #C0523B;
+                    box-shadow: 0 0 0 2px rgba(192, 82, 59, 0.2);
+                }
+            </style>
 
             <button type="submit" class="btn-hover w-full bg-terra-500 hover:bg-terra-400 text-white font-semibold py-2.5 px-4 rounded-xl transition duration-200 mt-2 shadow-lg shadow-terra-500/15">
                 {% if wizard.steps.current == 'auth' %}Sign In{% else %}Verify{% endif %}
