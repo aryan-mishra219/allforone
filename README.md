@@ -1,3 +1,5 @@
+LIVE LINK : https://allforone-8zta.onrender.com/
+
 # Finance Advisor - Smart Debt Repayment Planner 💰
 
 A high-precision financial management dashboard that uses the **Hybrid Strategy (Snowball + Avalanche)** to help users pay off debts faster. Features AI-powered financial coaching and automated debt lifecycle management.
